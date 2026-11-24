@@ -16,6 +16,7 @@ function 徽(v) {
   const s = String(v);
   if (s === "对齐" || s === "1" || s === "true" || s.includes("已入")) return `<span class="徽 绿">${s}</span>`;
   if (s.includes("缺") || s.includes("不符") || s === "0" || s === "false") return `<span class="徽 红">${s}</span>`;
+  if (s.includes("归档")) return `<span class="徽 黄">${s}</span>`;
   return `<span class="徽 灰">${s}</span>`;
 }
 function 表(headers, rows, mapRow) {

@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from app.services import 目录, 左装载, 右装载, 对齐, 结论, 夹具, 统计, 说明
+from app.services import (
+    目录, 左装载, 右装载, 对齐, 结论, 夹具, 统计, 说明, 换绑,
+)
 
 路由 = APIRouter()
 
@@ -51,19 +53,19 @@ def api_左装(体: dict):
 def api_右装(体: dict):
     return 右装载.装一批(体)
 
-@路由.post("/api/左轨/夹具/{名}")
-def api_左夹(名: str):
+@路由.post("/api/左轨/夹具/{name}")
+def api_左夹(name: str):
     try:
-        return 左装载.装一批(夹具.读取(名))
+        return 左装载.装一批(夹具.读取(name))
     except FileNotFoundError:
-        raise HTTPException(404, 名)
+        raise HTTPException(404, name)
 
-@路由.post("/api/右轨/夹具/{名}")
-def api_右夹(名: str):
+@路由.post("/api/右轨/夹具/{name}")
+def api_右夹(name: str):
     try:
-        return 右装载.装一批(夹具.读取(名))
+        return 右装载.装一批(夹具.读取(name))
     except FileNotFoundError:
-        raise HTTPException(404, 名)
+        raise HTTPException(404, name)
 
 @路由.post("/api/对齐/跑")
 def api_对齐():
@@ -90,6 +92,33 @@ def api_差型():
 def api_悬边():
     return 统计.悬边分布()
 
+@路由.get("/api/统计/换绑")
+def api_换绑统计():
+    return 统计.换绑分布()
+
+
+# —— 业务键换绑：登记（写）+ 只读接口（旧键、新键、现行读键、归档或拒因、valid）——
+
+@路由.get("/api/换绑")
+def api_换绑列表():
+    return 换绑.列表()
+
+@路由.get("/api/换绑/{rail}/{old_key}")
+def api_换绑详情(rail: str, old_key: str):
+    if rail not in ("左", "右"):
+        raise HTTPException(400, "轨别须为 左 或 右")
+    try:
+        return 换绑.详情(rail, old_key)
+    except KeyError:
+        raise HTTPException(404, f"无生效换绑:{rail}/{old_key}")
+
+@路由.post("/api/换绑")
+def api_换绑登记(体: dict):
+    try:
+        return 换绑.登记(体)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
 
 @路由.get("/api/仓情")
 def api_仓情():
@@ -105,4 +134,3 @@ def api_空桩():
             if p.is_dir() and p.name != "__pycache__" and (p / "__init__.py").is_file():
                 out.append(p.name)
     return {"空桩": out, "条数": len(out)}
-

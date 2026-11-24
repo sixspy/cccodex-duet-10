@@ -21,6 +21,7 @@
           <a href="/悬账单.html">悬账单</a>
           <a href="/对拍结论.html">对拍结论</a>
           <a href="/源登记.html" class="亮">源登记</a>
+          <a href="/换绑台.html">换绑台</a>
           <a href="/轨规.html">轨规</a>
       </nav>
     </header>
@@ -28,9 +29,13 @@
 
       <section class="行卡">
         <h1>源登记</h1>
-        <p class="说明">左源=渠道回执，右源=核心记账。皮用金融名，去皮只是双轨来源键。</p>
+        <p class="说明">左源=渠道回执，右源=核心记账。皮用金融名，去皮只是双轨来源键。换绑后该源的读键形态（归档/拒收、现行读键）在此可区分。</p>
       </section>
       <section class="行卡"><div id="表"></div></section>
+      <section class="行卡">
+        <h2>源键换绑册（读键形态）</h2>
+        <div id="绑表"></div>
+      </section>
 
     </main>
   </div>
@@ -39,9 +44,18 @@
 (async () => {
   const rows = await get("/api/源登记");
   document.getElementById("表").innerHTML = 表(
-    ["源键","轨别","名称","说明"],
+    ["源键","轨别","名称","说明","生效换绑数"],
     rows,
-    r => `<td>${r.源键}</td><td>${徽(r.轨别)}</td><td>${r.名称}</td><td>${r.说明||""}</td>`
+    r => `<td>${r.源键}</td><td>${徽(r.轨别)}</td><td>${r.名称}</td><td>${r.说明||""}</td>
+      <td>${徽(r.换绑数)}</td>`
+  );
+  const 绑 = rows.flatMap(r => (r.换绑 || []).map(x => ({...x, 源: r.源键})));
+  document.getElementById("绑表").innerHTML = 表(
+    ["源键","轨别","旧键","新键","现行读键","策略","拒因/归档","valid"],
+    绑,
+    r => `<td>${r.源}</td><td>${r.轨别}</td><td>${r.旧键}</td><td>${r.新键}</td>
+      <td>${r.现行读键}</td><td>${徽(r.策略)}</td>
+      <td>${r.策略==="拒收" ? (r.拒因||"") : "旧键只读归档"}</td><td>${徽(r.valid)}</td>`
   );
 })();
 </script>

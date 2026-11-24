@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+backend/tests/_tmp/
+backend/tests/_tmp_data/
+backend/tests/_tmp_data*/
+backend/tests/_tmp_data_conc/
+backend/data/

@@ -15,17 +15,21 @@ def 跑一次() -> dict:
         差总 = conn.execute("SELECT COUNT(*) AS c FROM 对齐差").fetchone()["c"]
 
         问题 = []
-        # 悬账单业务键应能在对齐差找到左缺/右缺
+        # 悬账单读键应能在对齐差找到同读键行；归档悬账对应「归档悬置」差型。
         for r in conn.execute("SELECT * FROM 悬账单").fetchall():
+            读键 = r["读键"] or r["业务键"]
             行 = conn.execute(
-                "SELECT 差型 FROM 对齐差 WHERE 业务键=?", (r["业务键"],)
+                "SELECT 差型 FROM 对齐差 WHERE 读键=?", (读键,)
             ).fetchone()
             if not 行:
-                问题.append(f"悬账{r['业务键']}无对齐差行")
+                问题.append(f"悬账{读键}无对齐差行")
+            elif "归档" in (r["原因"] or "") or 行["差型"] == "归档悬置":
+                if 行["差型"] != "归档悬置":
+                    问题.append(f"归档悬账{读键}差型={行['差型']}")
             elif r["悬边"] == "左" and 行["差型"] not in ("右缺", "金额不符"):
-                问题.append(f"左悬{r['业务键']}差型={行['差型']}")
+                问题.append(f"左悬{读键}差型={行['差型']}")
             elif r["悬边"] == "右" and 行["差型"] not in ("左缺", "金额不符"):
-                问题.append(f"右悬{r['业务键']}差型={行['差型']}")
+                问题.append(f"右悬{读键}差型={行['差型']}")
 
         通过 = len(问题) == 0 and (左 + 右 == 0 or 差总 > 0 or (左 > 0 and 右 > 0 and 对齐 >= 0))
         if 左 == 0 and 右 == 0:

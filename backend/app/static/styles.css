@@ -39,6 +39,7 @@ th{color:var(--muted);background:#121a22;position:sticky;top:0}
 .徽{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px}
 .徽.绿{background:rgba(93,202,138,.18);color:var(--ok)}
 .徽.红{background:rgba(224,122,122,.18);color:var(--bad)}
+.徽.黄{background:rgba(212,176,90,.18);color:var(--warn)}
 .徽.灰{background:rgba(138,160,180,.15);color:var(--muted)}
 .空{color:var(--muted);padding:16px;text-align:center}
 pre.报{margin:0;padding:12px;background:#0c1218;border:1px solid var(--line);border-radius:4px;

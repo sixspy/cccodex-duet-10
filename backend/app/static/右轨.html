@@ -21,6 +21,7 @@
           <a href="/悬账单.html">悬账单</a>
           <a href="/对拍结论.html">对拍结论</a>
           <a href="/源登记.html">源登记</a>
+          <a href="/换绑台.html">换绑台</a>
           <a href="/轨规.html">轨规</a>
       </nav>
     </header>
@@ -28,7 +29,7 @@
 
       <section class="行卡">
         <h1>右轨流水 · 核心记账</h1>
-        <p class="说明">只装右轨。不要在本页做对齐。</p>
+        <p class="说明">只装右轨。不要在本页做对齐。换绑后旧键按登记形态改读归档或被拒收，读键列即对齐实际引用。</p>
         <div class="工具条">
           <select id="夹具"></select>
           <button id="灌">灌入右轨夹具</button>
@@ -49,9 +50,9 @@
   const paint = async () => {
     const rows = await get("/api/右轨");
     document.getElementById("表").innerHTML = 表(
-      ["事件编号","业务键","金额分","源键","命运","事件时","批次"],
+      ["事件编号","业务键","读键","金额分","源键","命运","换绑编号","事件时","批次"],
       rows,
-      r => `<td>${r.事件编号}</td><td>${r.业务键}</td><td>${r.金额分}</td><td>${r.源键}</td><td>${徽(r.命运)}</td><td>${r.事件时}</td><td>${r.批次编号}</td>`
+      r => `<td>${r.事件编号}</td><td>${r.业务键}</td><td>${r.读键||r.业务键}</td><td>${r.金额分}</td><td>${r.源键}</td><td>${徽(r.命运)}</td><td>${r.换绑编号||"-"}</td><td>${r.事件时}</td><td>${r.批次编号}</td>`
     );
   };
   await paint();

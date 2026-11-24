@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>换绑台 · 对拍</title>
+  <link rel="stylesheet" href="/styles.css"/>
+</head>
+<body>
+  <div class="壳">
+    <header class="顶栏">
+      <div class="顶左">
+        <div class="牌名">对拍</div>
+        <div class="牌骨">左轨装载 → 右轨装载 → 同键对齐落差 → 单边悬账 → 对拍结论</div>
+      </div>
+      <nav class="管线">
+          <a href="/">对拍台</a>
+          <a href="/左轨.html">左轨流水</a>
+          <a href="/右轨.html">右轨流水</a>
+          <a href="/对齐差.html">对齐差表</a>
+          <a href="/悬账单.html">悬账单</a>
+          <a href="/对拍结论.html">对拍结论</a>
+          <a href="/源登记.html">源登记</a>
+          <a href="/换绑台.html" class="亮">换绑台</a>
+          <a href="/轨规.html">轨规</a>
+      </nav>
+    </header>
+    <main class="主">
+
+      <section class="行卡">
+        <h1>业务键换绑台</h1>
+        <p class="说明">
+          渠道改键后旧键悬账与新键流水并存，登记时择定读键形态，装载与对齐都按此读键；登记与装载同事务写锁互斥，钉同成败。
+        </p>
+        <div class="标签行">
+          <span class="标签">归档：旧键进只读归档，旧键悬/流水改读归档，现行对齐只读新键，读引用不同</span>
+          <span class="标签">拒收：切流账册拒旧键回刷，旧键装载拒收，悬账挂旧键直至人工迁，现行不自动迁键</span>
+        </div>
+      </section>
+
+      <section class="行卡 双栏">
+        <div>
+          <h2>登记换绑</h2>
+          <div class="工具条">
+            <label>轨别
+              <select id="轨别"><option value="左">左（渠道）</option><option value="右">右（核心）</option></select>
+            </label>
+            <label>源键 <input id="源键" value="渠甲" style="width:110px"/></label>
+          </div>
+          <div class="工具条">
+            <label>旧键 <input id="旧键" placeholder="改键前业务键" style="width:150px"/></label>
+            <label>新键 <input id="新键" placeholder="改键后业务键" style="width:150px"/></label>
+          </div>
+          <div class="工具条">
+            <label>策略
+              <select id="策略">
+                <option value="归档">归档（旧键只读归档）</option>
+                <option value="拒收">拒收（旧键回刷拒收）</option>
+              </select>
+            </label>
+            <label>拒因(拒收用) <input id="拒因" style="width:200px"/></label>
+            <button id="登记">登记换绑</button>
+            <button class="次" id="刷">刷新</button>
+          </div>
+          <pre class="报" id="报"></pre>
+        </div>
+        <div>
+          <h2>形态水位</h2>
+          <div id="水位"></div>
+          <h2 class="mt10">只读详情（旧键/新键/现行读键/归档或拒因/valid）</h2>
+          <div id="详情" class="说明">在右侧列表点「详情」，或按轨别+旧键查询。</div>
+          <div class="工具条 mt8">
+            <select id="查轨别" style="width:90px">
+              <option value="左">左</option><option value="右">右</option>
+            </select>
+            <input id="查旧键" placeholder="旧键" style="width:150px"/>
+            <button class="次" id="查">查询</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="行卡">
+        <h2>换绑册（策略列表）</h2>
+        <div id="表"></div>
+      </section>
+
+    </main>
+  </div>
+  <script src="/common.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    function 详情卡(d) {
+      if (!d || !d.换绑编号) return '<div class="空">无记录</div>';
+      const 行 = [
+        ["换绑编号", d.换绑编号], ["轨别", d.轨别], ["源键", d.源键 || "-"],
+        ["旧键", d.旧键], ["新键", d.新键],
+        ["现行读键", d.现行读键],
+        ["策略", d.策略],
+        [d.策略 === "拒收" ? "拒因" : "归档", d.策略 === "拒收" ? (d.拒因 || "-") : "旧键只读归档·不入现行"],
+        ["valid", d.valid],
+        ["随绑归档笔数", d.随绑归档笔数 ?? "-"],
+        ["时刻", d.时刻],
+      ];
+      return '<div class="表绕"><table><tbody>' +
+        行.map(([k, v]) => `<tr><th style="width:140px">${k}</th><td>${v}</td></tr>`).join("") +
+        "</tbody></table></div>";
+    }
+    async function 详情(rail, old) {
+      try {
+        const d = await get(`/api/换绑/${encodeURIComponent(rail)}/${encodeURIComponent(old)}`);
+        $("详情").innerHTML = 详情卡(d);
+      } catch (e) { $("详情").innerHTML = `<div class="空">${e.message}</div>`; }
+    }
+    async function paint() {
+      const rows = await get("/api/换绑");
+      const s = await get("/api/统计/换绑");
+      $("水位").innerHTML = 统计([
+        ["生效换绑", s.生效换绑数],
+        ["归档策略", s.策略["归档"] || 0],
+        ["拒收策略", s.策略["拒收"] || 0],
+        ["归档左流水", s.归档流水["左"]],
+        ["归档右流水", s.归档流水["右"]],
+      ]);
+      $("表").innerHTML = 表(
+        ["换绑编号","轨别","源键","旧键","新键","现行读键","策略","拒因/归档","valid","时刻","操作"],
+        rows,
+        r => `<td>${r.换绑编号}</td><td>${r.轨别}</td><td>${r.源键||"-"}</td>
+          <td>${r.旧键}</td><td>${r.新键}</td><td>${r.现行读键}</td>
+          <td>${徽(r.策略)}</td>
+          <td>${r.策略==="拒收" ? (r.拒因||"") : "只读归档"}</td>
+          <td>${徽(r.valid)}</td><td>${r.时刻}</td>
+          <td><button class="次" onclick='详情("${r.轨别}","${r.旧键}")'>详情</button></td>`
+      );
+    }
+    $("登记").onclick = async () => {
+      const body = {
+        轨别: $("轨别").value, 源键: $("源键").value.trim(),
+        旧键: $("旧键").value.trim(), 新键: $("新键").value.trim(),
+        策略: $("策略").value, 拒因: $("拒因").value.trim(),
+      };
+      try {
+        const d = await post("/api/换绑", body);
+        $("报").textContent = JSON.stringify(d, null, 2);
+        await paint();
+        await 详情(d.轨别, d.旧键);
+      } catch (e) { $("报").textContent = "登记失败：" + e.message; }
+    };
+    $("查").onclick = () => 详情($("查轨别").value, $("查旧键").value.trim());
+    $("刷").onclick = paint;
+    paint();
+  </script>
+</body>
+</html>
